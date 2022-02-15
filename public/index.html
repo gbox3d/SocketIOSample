@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>socketio sample</title>
+    <!-- <script src="/socket.io/socket.io.js"></script> -->
+
+    <style>
+        #msgTxtList ul{
+            width: 100%;
+            height: 150px;
+            overflow: auto;
+            border: 1px solid #ccc;
+        }
+        #msgTxtList li{
+            list-style: none;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="socketStatus">conneting... server</div>
+
+    <div id="loginUI" hidden>
+        <input id="userName" type="text" placeholder="user name">
+        <button id="loginBtn">login</button>
+    </div>
+
+    <div id="enterRoom" hidden>
+        <p " >enter room</p>
+        <div>
+            <input>
+            <button>ok</button>
+        </div>
+    </div>
+
+    <div id="chatUI" hidden >
+        <div>
+            제목 : <span id="info">Room Name</span> 인원수 :
+            <span id="userCount"></span>
+        </div>
+        
+        <ul id="userList"></ul>
+
+        <hr/>
+
+        <div id="msgTxtList">
+
+            <ul>
+    
+            </ul>
+    
+        </div>
+
+        <div>
+            <input id="msg">
+            <button id="sendMsg" >send</button>
+        </div>
+
+    </div>
+
+    
+
+
+
+    <script type="module">
+        import main from './index.js'
+        document.addEventListener('DOMContentLoaded', main)
+    </script>
+
+</body>
+
+</html>
