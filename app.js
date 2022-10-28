@@ -1,6 +1,7 @@
 import express from 'express'
 import dotenv from "dotenv"
 import https from 'https'
+import http from 'http'
 import fs from 'fs'
 import SocketIO from "socket.io";
 
@@ -8,7 +9,7 @@ import SocketIO from "socket.io";
 
 
 import { countMembers, getRoomUserList } from './utils/rooms'
-import {userJoin,getCurrentUser,userLeave,getRoomUsers} from './utils/users'
+import { userJoin, getCurrentUser, userLeave, getRoomUsers } from './utils/users'
 
 // import SocketIO_version from "socket.io/package";
 
@@ -33,21 +34,35 @@ app.all('*', (req, res) => {
     .send('oops! resource not found')
 });
 
-//https 서버하고 연동시켜 실행시킵니다
-const options = {
-  key: fs.readFileSync('/home/ubiqos/work/project/cert_files/2022_2/private.key'),
-  cert: fs.readFileSync('/home/ubiqos/work/project/cert_files/2022_2/certificate.crt'),
-  ca: fs.readFileSync('/home/ubiqos/work/project/cert_files/2022_2/ca_bundle.crt'),
-};
-// https 서버를 만들고 실행시킵니다
-const httpsServer = https.createServer(options, app)
+let ioServer;
+if (process.env.PROTOCOL === 'https') {
+  //https 서버하고 연동시켜 실행시킵니다
+  const options = {
+    key: fs.readFileSync('/home/ubiqos/work/project/cert_files/2022_2/private.key'),
+    cert: fs.readFileSync('/home/ubiqos/work/project/cert_files/2022_2/certificate.crt'),
+    ca: fs.readFileSync('/home/ubiqos/work/project/cert_files/2022_2/ca_bundle.crt'),
+  };
+  // https 서버를 만들고 실행시킵니다
+  const httpsServer = https.createServer(options, app)
+  //socket io
+  ioServer = SocketIO(httpsServer);
+  console.log('https server is ready');
+  httpsServer.listen(process.env.PORT, () => {
+    console.log(`server run at :  ${process.env.PORT}`)
+  });
 
-//socket io
-const ioServer = SocketIO(httpsServer);
+}
+else {
+  //http 서버하고 연동시켜 실행시킵니다
+  const httpServer = http.createServer(app)
+  //socket io
+  ioServer = SocketIO(httpServer);
+  console.log('http server is ready');
+  httpServer.listen(process.env.PORT, () => {
+    console.log(`server run at :  ${process.env.PORT}`)
+  });
+}
 
-// function countMembers(io, roomName) {
-//   return io.sockets.adapter.rooms.get(roomName).size
-// }
 
 ioServer.on("connection", (socket) => {
 
@@ -55,18 +70,18 @@ ioServer.on("connection", (socket) => {
 
   socket.onAny((eventName, evt) => {
     // ...
-    console.log(`eventName: ${eventName}`,evt);
+    console.log(`eventName: ${eventName}`, evt);
   });
 
-  socket.on("login", (data,done) => {
+  socket.on("login", (data, done) => {
     console.log(`login: ${data.name}`);
     userJoin({
       id: socket.id,
-      username : data.name,
+      username: data.name,
       room: '',
     });
 
-    done({r:'ok'});
+    done({ r: 'ok' });
   });
 
 
@@ -163,8 +178,8 @@ ioServer.on("connection", (socket) => {
   socket.on("message", (roomName, message) => {
     console.log('message', roomName, message);
     socket.to(roomName).emit('message', {
-      msg : message,
-      at : new Date(),
+      msg: message,
+      at: new Date(),
       user: getCurrentUser(socket.id)
     });
   });
@@ -172,8 +187,5 @@ ioServer.on("connection", (socket) => {
 
 });
 
-httpsServer.listen(process.env.PORT, () => {
-  console.log(`server run at :  ${process.env.PORT}`)
-});
 
 
